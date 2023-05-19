@@ -22,18 +22,22 @@ namespace TodoApi.Controllers
 
         // GET: api/TodoItems
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TodoItem>>> GetTodoItems()
+        public async Task<ActionResult<IEnumerable<TodoItemDTO>>> GetTodoItems()
         {
           if (_context.TodoItems == null)
           {
               return NotFound();
           }
-            return await _context.TodoItems.ToListAsync();
+
+          // return await _context.TodoItems.ToListAsync();
+          return await _context.TodoItems
+            .Select(x => ItemToDTO(x))
+            .ToListAsync();
         }
 
         // GET: api/TodoItems/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<TodoItem>> GetTodoItem(long id)
+        public async Task<ActionResult<TodoItemDTO>> GetTodoItem(long id)
         {
           if (_context.TodoItems == null)
           {
@@ -46,7 +50,7 @@ namespace TodoApi.Controllers
                 return NotFound();
             }
 
-            return todoItem;
+            return ItemToDTO(todoItem);
         }
 
         // PUT: api/TodoItems/5
@@ -83,7 +87,7 @@ namespace TodoApi.Controllers
         // POST: api/TodoItems
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<TodoItem>> PostTodoItem(TodoItem todoItem)
+        public async Task<ActionResult<TodoItemDTO>> PostTodoItem(TodoItem todoItem)
         {
           if (_context.TodoItems == null)
           {
@@ -92,7 +96,8 @@ namespace TodoApi.Controllers
             _context.TodoItems.Add(todoItem);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetTodoItem", new { id = todoItem.Id }, todoItem);
+            // return CreatedAtAction("GetTodoItem", new { id = todoItem.Id }, todoItem);
+            return CreatedAtAction(nameof(GetTodoItem), new { id = todoItem.Id }, ItemToDTO(todoItem));
         }
 
         // DELETE: api/TodoItems/5
@@ -119,5 +124,12 @@ namespace TodoApi.Controllers
         {
             return (_context.TodoItems?.Any(e => e.Id == id)).GetValueOrDefault();
         }
+
+        private static TodoItemDTO ItemToDTO(TodoItem todoItem) => new TodoItemDTO
+        {
+           Id = todoItem.Id,
+           Name = todoItem.Name,
+           IsComplete = todoItem.IsComplete
+       };
     }
 }
